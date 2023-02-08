@@ -1,0 +1,61 @@
+h1 {
+    font-size: 50px;
+}
+
+h2 {
+    font-size: 30px;
+}
+
+#points {
+    font-size: 20px;
+}
+
+.game {
+    padding: 100px;
+}
+
+.c {
+    background-color: aqua;
+}
+
+
+body {
+    display: flex;
+    align-items: center;
+}
+
+#board {
+    display: grid;
+    width: 633px;
+    height: 633px;
+    padding: 6px;
+    grid-template-columns: auto auto auto auto;
+    grid-template-rows: auto auto auto auto;
+    background-color: rgb(184, 184, 184);
+    border: 2px solid #6e6761;
+    gap: 6px;
+    border-radius: 6px;
+    margin-top: 20px;
+}
+
+.box {
+    display: flex;
+    width: 150px;
+    height: 150px;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(119, 0, 255, 0.377);
+    border-radius: 6px;
+}
+
+.emptyBox {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    color: black;
+    align-items: center;
+    justify-content: center;
+    background-color: #e7e7e760;
+    border-radius: 6px;
+
+}
