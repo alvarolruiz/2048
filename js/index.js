@@ -62,7 +62,7 @@ function imprimirTablero() {
     for (j = 0; j < width; j++) {
       if (squares[i][j].className == "box") {
         squares[i][j].style.backgroundColor = getBoxColor(squares[i][j].innerHTML);
-      } else {
+      } else if(squares[i][j].className == "emptyBox"){
         squares[i][j].style.backgroundColor = '#e7e7e760';
       }
       board.appendChild(squares[i][j]);
@@ -121,6 +121,7 @@ function control(e) {
 }
 function keyLeft() {
   let canMove = true;
+  
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
       if (j > 0) {
@@ -136,7 +137,7 @@ function keyLeft() {
               squares[yPos][xPos].className = "emptyBox";
               xPos -= 1;
             } else {
-              if ((squares[yPos][xPos].innerHTML == squares[yPos][xPos - 1].innerHTML) && (squares[yPos][xPos - 1].className == "box")) {
+              if (leftIsCombinable(yPos, xPos) && leftIsABox(yPos,xPos)) {
                 squares[yPos][xPos - 1].innerHTML = (parseInt(squares[yPos][xPos].innerHTML) + parseInt(squares[yPos][xPos - 1].innerHTML)).toString();
                 squares[yPos][xPos].innerHTML = "";
                 squares[yPos][xPos].className = "emptyBox";
@@ -153,12 +154,68 @@ function keyLeft() {
       }
     }
   }
+  generateBox();
   imprimirTablero();
 }
 
+function leftIsCombinable(y, x){
+  return squares[y][x].innerHTML == squares[y][x-1].innerHTML;
+}
+
+function leftIsABox(y,x){
+return squares[y][x].className == "box";
+}
+
 function keyTop() {
+  let canMove = true;
+  let hasCombined = [false,false,false,false];
+  for (i = 0; i < height; i++) {
+    if (i > 0) {
+      for (j = 0; j < width; j++) {
+        if (squares[i][j].className == "box") {
+          let xPos = j;
+          let yPos = i;
+          do {
+            canMove = true;
+            if (squares[yPos - 1][xPos].className == "emptyBox") {
+              squares[yPos - 1][xPos].innerHTML = squares[yPos][xPos].innerHTML;
+              squares[yPos - 1][xPos].className = squares[yPos][xPos].className;
+              squares[yPos][xPos].innerHTML = "";
+              squares[yPos][xPos].className = "emptyBox";
+              yPos -= 1;
+            } else {
+              if (topIsCombinable(yPos, xPos) && topIsBox(yPos, xPos)) {
+                if (hasCombined[]) 
+                squares[yPos - 1][xPos].innerHTML = (parseInt(squares[yPos][xPos].innerHTML) + parseInt(squares[yPos - 1][xPos].innerHTML)).toString();
+                squares[yPos][xPos].innerHTML = "";
+                squares[yPos][xPos].className = "emptyBox";
+                xPos -= 1;
+              }
+            }
+            if (yPos == 0 || ((squares[yPos][xPos].innerHTML != squares[yPos - 1][xPos].innerHTML) && (squares[yPos - 1][xPos].className == "box"))) {
+              canMove = false;
+            }
+
+          } while (canMove == true);
+
+        }
+
+      }
+    }
+
+  }
+  generateBox();
+  imprimirTablero();
   /*y-- */
 
+}
+
+function topIsCombinable (y,x){
+  return squares[y][x].innerHTML == squares[y-1][x].innerHTML;
+}
+
+function topIsBox (y,x){
+return squares[y-1][x].className == "box";
 }
 
 function keyRight() {
@@ -197,6 +254,7 @@ function keyRight() {
     }
   }
   imprimirTablero();
+  generateBox();
   /*x++ */
 
 }
