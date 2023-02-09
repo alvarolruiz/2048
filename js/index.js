@@ -2,11 +2,14 @@ window.onload = init;
 const width = 4;
 const height = 4;
 var squares = [];
+var marcador = 0;
+var marcadorDisplay;
 
 function init() {
   const board = document.getElementById("board");
   crearTablero(board);
   document.addEventListener('keyup', control);
+  marcadorDisplay = document.getElementById("points");
 }
 
 
@@ -38,9 +41,7 @@ function getBoxColor(value) {
       break;
   }
   return color;
-
 }
-
 
 /* emptyBox*/
 function crearTablero(board) {
@@ -62,8 +63,6 @@ function imprimirTablero() {
     for (j = 0; j < width; j++) {
       if (squares[i][j].className == "box") {
         squares[i][j].style.backgroundColor = getBoxColor(squares[i][j].innerHTML);
-      } else if(squares[i][j].className == "emptyBox"){
-        squares[i][j].style.backgroundColor = '#e7e7e760';
       }
       board.appendChild(squares[i][j]);
     }
@@ -120,8 +119,14 @@ function control(e) {
   }
 }
 function keyLeft() {
-  let canMove = true;
-  
+  moveLeft();
+  generateBox();
+  imprimirTablero();
+}
+
+function moveLeft() {
+  /*Acumulador puntuacion obtenida en movimiento */
+  let hasCombined = [false, false, false, false];
   for (i = 0; i < height; i++) {
     for (j = 0; j < width; j++) {
       if (j > 0) {
@@ -129,46 +134,159 @@ function keyLeft() {
           let xPos = j;
           let yPos = i;
           do {
-            canMove = true;
-            if (squares[yPos][xPos - 1].className == "emptyBox") {
-              squares[yPos][xPos - 1].innerHTML = squares[yPos][xPos].innerHTML;
-              squares[yPos][xPos - 1].className = squares[yPos][xPos].className;
-              squares[yPos][xPos].innerHTML = "";
-              squares[yPos][xPos].className = "emptyBox";
+            if (sideIsEmptyBox("Left", yPos, xPos)) {
+              move("Left", yPos, xPos);
               xPos -= 1;
-            } else {
-              if (leftIsCombinable(yPos, xPos) && leftIsABox(yPos,xPos)) {
-                squares[yPos][xPos - 1].innerHTML = (parseInt(squares[yPos][xPos].innerHTML) + parseInt(squares[yPos][xPos - 1].innerHTML)).toString();
-                squares[yPos][xPos].innerHTML = "";
-                squares[yPos][xPos].className = "emptyBox";
-                xPos -= 1;
-              }
+            } else if (!hasCombined[i] && sideIsCombinable("Left",yPos, xPos)) {
+              combineBoxes("Left", yPos, xPos);
+              hasCombined[i] = true;
+              xPos -= 1;
             }
-            if (xPos == 0 || ((squares[yPos][xPos].innerHTML != squares[yPos][xPos - 1].innerHTML) && (squares[yPos][xPos - 1].className == "box"))) {
-              canMove = false;
-            }
-
-          } while (canMove == true);
-
+          } while (canKeepMoving("Left", yPos, xPos, hasCombined[i]));
         }
       }
     }
   }
-  generateBox();
-  imprimirTablero();
 }
 
-function leftIsCombinable(y, x){
-  return squares[y][x].innerHTML == squares[y][x-1].innerHTML;
+function canKeepMoving(side, y, x, hasCombined) {
+  let canKeepMoving = true;
+  switch (side) {
+    case "Left":
+      if (x == 0 ||
+        ((squares[y][x].innerHTML == squares[y][x - 1].innerHTML) && hasCombined && squares[y][x - 1].className == "box") ||
+        ((squares[y][x].innerHTML != squares[y][x - 1].innerHTML) && squares[y][x - 1].className == "box")) {
+        canKeepMoving = false;
+      }
+      break;
+    case "Right":
+      if (x == width - 1 ||
+        ((squares[y][x].innerHTML == squares[y][x + 1].innerHTML) && hasCombined && squares[y][x - 1].className == "box") ||
+        ((squares[y][x].innerHTML != squares[y][x + 1].innerHTML) && squares[y][x + 1].className == "box")) {
+        canKeepMoving = false;
+      }
+      break;
+    case "Bottom":
+      if (y == height - 1 ||
+        ((squares[y][x].innerHTML == squares[y + 1][x].innerHTML) && hasCombined && squares[y + 1][x].className == "box") ||
+        ((squares[y][x].innerHTML != squares[y + 1][x].innerHTML) && squares[y + 1][x].className == "box")) {
+        canKeepMoving = false;
+      }
+      break;
+
+    case "Top":
+      if (y == 0 ||
+        ((squares[y][x].innerHTML == squares[y - 1][x].innerHTML) && hasCombined && squares[y - 1][x].className == "box") ||
+        ((squares[y][x].innerHTML != squares[y - 1][x].innerHTML) && squares[y - 1][x].className == "box")) {
+        canKeepMoving = false;
+      }
+      break;
+  }
+  return canKeepMoving;
 }
 
-function leftIsABox(y,x){
-return squares[y][x].className == "box";
+function move(side, y, x) {
+  switch (side) {
+    case "Left":
+      squares[y][x - 1].innerHTML = squares[y][x].innerHTML;
+      squares[y][x - 1].className = squares[y][x].className;
+      emptyCurrentBox(y, x);
+      break;
+    case "Right":
+      squares[y][x + 1].innerHTML = squares[y][x].innerHTML;
+      squares[y][x + 1].className = squares[y][x].className;
+      emptyCurrentBox(y, x);
+      break;
+    case "Bottom":
+      ssquares[y + 1][x].innerHTML = squares[y][x].innerHTML;
+      squares[y + 1][x].className = squares[y][x].className;
+      emptyCurrentBox(y, x);
+      break;
+    case "Top":
+      ssquares[y - 1][x].innerHTML = squares[y][x].innerHTML;
+      squares[y - 1][x].className = squares[y][x].className;
+      emptyCurrentBox(y, x);
+      break;
+
+  }
+}
+
+function combineBoxes(side, y, x) {
+  switch (side) {
+    case "Left":
+      squares[y][x - 1].innerHTML = (parseInt(squares[y][x].innerHTML) + parseInt(squares[y][x - 1].innerHTML)).toString();
+      emptyCurrentBox(y, x);
+      break;
+    case "Right":
+      squares[y][x + 1].innerHTML = (parseInt(squares[y][x].innerHTML) + parseInt(squares[y][x + 1].innerHTML)).toString();
+      emptyCurrentBox(y, x);
+      break;
+    case "Bottom":
+      squares[y + 1][x].innerHTML = (parseInt(squares[y][x].innerHTML) + parseInt(squares[y + 1][x].innerHTML)).toString();
+      emptyCurrentBox(y, x);
+      break;
+    case "Top":
+      squares[y - 1][x].innerHTML = (parseInt(squares[y][x].innerHTML) + parseInt(squares[y - 1][x].innerHTML)).toString();
+      emptyCurrentBox(y, x);
+      break;
+  }
+}
+
+function emptyCurrentBox(y, x) {
+  squares[y][x].innerHTML = "";
+  squares[y][x].className = "emptyBox";
+  squares[y][x].style.backgroundColor = '#e7e7e760';
+
+}
+
+function sideIsCombinable(side, y, x) {
+  let isCombinable = false;
+  switch (side) {
+    case "Left":
+      isCombinable = (squares[y][x].innerHTML == squares[y][x - 1].innerHTML) && (squares[y][x - 1].className == "box");
+      break;
+    case "Right":
+      isCombinable = (squares[y][x].innerHTML == squares[y][x + 1].innerHTML) && (squares[y][x + 1].className == "box");
+      break;
+    case "Bottom":
+      isCombinable = (squares[y][x].innerHTML == squares[y + 1][x].innerHTML) && (squares[y + 1][x].className == "box");
+      break;
+    case "Top":
+      isCombinable = (squares[y][x].innerHTML == squares[y - 1][x].innerHTML) && (squares[y + 1][x].className == "box");
+      break;
+  }
+  return isCombinable;
+}
+
+function sideIsEmptyBox(side, y, x) {
+  let isEmptyBox = false;
+  switch (side) {
+    case "Left":
+      isEmptyBox = squares[y][x - 1].className == "emptyBox";
+      break;
+    case "Right":
+      isEmptyBox = squares[y][x + 1].className == "emptyBox";
+      break;
+    case "Bottom":
+      isEmptyBox = squares[y + 1][x].className == "emptyBox";
+      break;
+    case "Top":
+      isEmptyBox = squares[y - 1][x].className == "emptyBox";
+      break;
+  }
+  return isEmptyBox;
 }
 
 function keyTop() {
-  let canMove = true;
-  let hasCombined = [false,false,false,false];
+  moveTop();
+  generateBox();
+  imprimirTablero();
+
+  /*y-- */
+}
+
+function moveTop() {
+  let hasCombined = [false, false, false, false];
   for (i = 0; i < height; i++) {
     if (i > 0) {
       for (j = 0; j < width; j++) {
@@ -176,51 +294,33 @@ function keyTop() {
           let xPos = j;
           let yPos = i;
           do {
-            canMove = true;
-            if (squares[yPos - 1][xPos].className == "emptyBox") {
-              squares[yPos - 1][xPos].innerHTML = squares[yPos][xPos].innerHTML;
-              squares[yPos - 1][xPos].className = squares[yPos][xPos].className;
-              squares[yPos][xPos].innerHTML = "";
-              squares[yPos][xPos].className = "emptyBox";
+            if (sideIsEmptyBox("Top", yPos, xPos)) {
+              move("Top", yPos, xPos);
               yPos -= 1;
-            } else {
-              if (topIsCombinable(yPos, xPos) && topIsBox(yPos, xPos)) {
-                if (hasCombined[]) 
-                squares[yPos - 1][xPos].innerHTML = (parseInt(squares[yPos][xPos].innerHTML) + parseInt(squares[yPos - 1][xPos].innerHTML)).toString();
-                squares[yPos][xPos].innerHTML = "";
-                squares[yPos][xPos].className = "emptyBox";
-                xPos -= 1;
-              }
+            } else if (!hasCombined[x] && sideIsCombinable("Top", yPos, xPos)) {
+              combineBoxes("Top", yPos, xPos);
+              hasCombined[x] = true;
+              yPos -= 1;
             }
-            if (yPos == 0 || ((squares[yPos][xPos].innerHTML != squares[yPos - 1][xPos].innerHTML) && (squares[yPos - 1][xPos].className == "box"))) {
-              canMove = false;
-            }
-
-          } while (canMove == true);
-
+          } while (canKeepMoving("Top", yPos, xPos, hasCombined[xPos]));
         }
 
       }
     }
-
   }
-  generateBox();
-  imprimirTablero();
-  /*y-- */
-
-}
-
-function topIsCombinable (y,x){
-  return squares[y][x].innerHTML == squares[y-1][x].innerHTML;
-}
-
-function topIsBox (y,x){
-return squares[y-1][x].className == "box";
 }
 
 function keyRight() {
+  moveRight();
+  generateBox();
+  imprimirTablero();
 
-  let canMove = true;
+  /*x++ */
+
+}
+
+function moveRight() {
+  let hasCombined = [false, false, false, false];
   for (i = 0; i < height; i++) {
     for (j = width - 1; j >= 0; j--) {
       if (j < width - 1) {
@@ -228,39 +328,50 @@ function keyRight() {
           let xPos = j;
           let yPos = i;
           do {
-            canMove = true;
-            if (squares[yPos][xPos + 1].className == "emptyBox") {
-              squares[yPos][xPos + 1].innerHTML = squares[yPos][xPos].innerHTML;
-              squares[yPos][xPos + 1].className = squares[yPos][xPos].className;
-              squares[yPos][xPos].innerHTML = "";
-              squares[yPos][xPos].className = "emptyBox";
+            if (sideIsEmptyBox("Right", yPos, xPos)) {
+              move("Right", yPos, xPos);
               xPos += 1;
-            } else {
-              if ((squares[yPos][xPos].innerHTML == squares[yPos][xPos + 1].innerHTML) && (squares[yPos][xPos + 1].className == "box")) {
-                squares[yPos][xPos + 1].innerHTML = (parseInt(squares[yPos][xPos].innerHTML) + parseInt(squares[yPos][xPos + 1].innerHTML)).toString();
-                squares[yPos][xPos].innerHTML = "";
-                squares[yPos][xPos].className = "emptyBox";
-                xPos += 1;
-              }
+            } else if (!hasCombined[i] && sideIsCombinable("Right", yPos, xPos)) {
+              combineBoxes("Right", yPos, xPos);
+              hasCombined[i] = true;
+              xPos += 1;
             }
-            if (xPos == 3 || ((squares[yPos][xPos].innerHTML != squares[yPos][xPos + 1].innerHTML) && (squares[yPos][xPos + 1].className == "box"))) {
-              canMove = false;
-            }
-
-          } while (canMove);
-
+          } while (canKeepMoving("Right", yPos, xPos, hasCombined[yPos]));
         }
       }
     }
   }
-  imprimirTablero();
-  generateBox();
-  /*x++ */
-
 }
 function keyDown() {
+  moveDown();
+  generateBox();
+  imprimirTablero()
   /*y++ */
 
+}
+
+function moveDown() {
+  let hasCombined = [false, false, false, false];
+  for (i = height-1; i >= 0; i--) {
+    for (j = 0; j < width-1; j++) {
+      if (i < height - 1) {
+        if (squares[i][j].className == "box") {
+          let xPos = j;
+          let yPos = i;
+          do {
+            if (sideIsEmptyBox("Bottom", yPos, xPos)) {
+              move("Bottom", yPos, xPos);
+              xPos += 1;
+            } else if (!hasCombined[i] && sideIsCombinable("Bottom",yPos, xPos)) {
+              combineBoxes("Bottom", yPos, xPos);
+              hasCombined[i] = true;
+              xPos += 1;
+            }
+          } while (canKeepMoving("Bottom", yPos, xPos, hasCombined[xPos]));
+        }
+      }
+    }
+  }
 }
 
 
