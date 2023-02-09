@@ -109,13 +109,13 @@ Derecha: cajas en y,w-1;
 function control(e) {
   switch (e.keyCode) {
     case 37: keyLeft();
-      break
+      break;
     case 38: keyTop();
-      break
+      break;
     case 39: keyRight();
-      break
+      break;
     case 40: keyDown();
-      break
+      break;
   }
 }
 function keyLeft() {
@@ -137,18 +137,21 @@ function moveLeft() {
             if (sideIsEmptyBox("Left", yPos, xPos)) {
               move("Left", yPos, xPos);
               xPos -= 1;
-            } else if (!hasCombined[i] && sideIsCombinable("Left", yPos, xPos)) {
+            } else if (!hasCombined[yPos] && sideIsCombinable("Left", yPos, xPos)) {
               combineBoxes("Left", yPos, xPos);
               hasCombined[i] = true;
               xPos -= 1;
             }
-          } while (canKeepMoving("Left", yPos, xPos, hasCombined[i]));
+          } while (canKeepMoving("Left", yPos, xPos, hasCombined[yPos]));
+          hasCombined[xPos] = false;
+
         }
       }
     }
   }
 }
 
+/*No funciona bien. hasCombined, replantear*/
 function keyTop() {
   moveTop();
   generateBox();
@@ -169,12 +172,14 @@ function moveTop() {
             if (sideIsEmptyBox("Top", yPos, xPos)) {
               move("Top", yPos, xPos);
               yPos -= 1;
-            } else if (!hasCombined[x] && sideIsCombinable("Top", yPos, xPos)) {
+            } else if (!hasCombined[j] && sideIsCombinable("Top", yPos, xPos)) {
               combineBoxes("Top", yPos, xPos);
               hasCombined[x] = true;
               yPos -= 1;
             }
           } while (canKeepMoving("Top", yPos, xPos, hasCombined[xPos]));
+          hasCombined[xPos] = false;
+
         }
 
       }
@@ -208,7 +213,8 @@ function moveRight() {
               hasCombined[i] = true;
               xPos += 1;
             }
-          } while (canKeepMoving("Right", yPos, xPos, hasCombined[yPos]));
+          } while (canKeepMoving("Right", yPos, xPos, hasCombined[i]));
+
         }
       }
     }
@@ -218,7 +224,8 @@ function moveRight() {
 function keyDown() {
   moveDown();
   generateBox();
-  imprimirTablero()
+  imprimirTablero();
+
   /*y++ */
 
 }
@@ -234,11 +241,11 @@ function moveDown() {
           do {
             if (sideIsEmptyBox("Bottom", yPos, xPos)) {
               move("Bottom", yPos, xPos);
-              xPos += 1;
-            } else if (!hasCombined[i] && sideIsCombinable("Bottom", yPos, xPos)) {
+              yPos += 1;
+            } else if (!hasCombined[xPos] && sideIsCombinable("Bottom", yPos, xPos)) {
               combineBoxes("Bottom", yPos, xPos);
               hasCombined[i] = true;
-              xPos += 1;
+              yPos += 1;
             }
           } while (canKeepMoving("Bottom", yPos, xPos, hasCombined[xPos]));
         }
@@ -289,21 +296,27 @@ function move(side, y, x) {
     case "Left":
       squares[y][x - 1].innerHTML = squares[y][x].innerHTML;
       squares[y][x - 1].className = squares[y][x].className;
+      squares[y][x - 1].style.backgroundColor = getBoxColor(squares[y][x - 1].innerHTML);
+
       emptyCurrentBox(y, x);
       break;
     case "Right":
       squares[y][x + 1].innerHTML = squares[y][x].innerHTML;
       squares[y][x + 1].className = squares[y][x].className;
+      squares[y][x + 1].style.backgroundColor = getBoxColor(squares[y][x + 1].innerHTML);
       emptyCurrentBox(y, x);
       break;
     case "Bottom":
-      ssquares[y + 1][x].innerHTML = squares[y][x].innerHTML;
+      squares[y + 1][x].innerHTML = squares[y][x].innerHTML;
       squares[y + 1][x].className = squares[y][x].className;
+      squares[y + 1][x].style.backgroundColor = getBoxColor(squares[y + 1][x].innerHTML);
       emptyCurrentBox(y, x);
       break;
     case "Top":
-      ssquares[y - 1][x].innerHTML = squares[y][x].innerHTML;
+      squares[y - 1][x].innerHTML = squares[y][x].innerHTML;
       squares[y - 1][x].className = squares[y][x].className;
+      squares[y - 1][x].style.backgroundColor = getBoxColor(squares[y - 1][x].innerHTML);
+
       emptyCurrentBox(y, x);
       break;
 
