@@ -100,6 +100,7 @@ encontremos con la misma en el lado indicado por la flecha, modificar array
 , cambiar color, cambiar puntuacion y generar un nuevo cuadrado.
 
 Falta guardar los puntos en el marcador por cada movimiento y comprobar si se ha perdido o si se ha ganado.
+Cuando se le da para abajo en la columna 3 no se mueven las filas. Conseguir que el 
 */
 
 
@@ -116,16 +117,17 @@ function control(e) {
   }
 }
 function keyLeft() {
-  moveLeft();
+  let obtainedPoints = moveLeft();
+  updateScore(obtainedPoints);
   generateBox();
   imprimirTablero();
 }
-  /*Acumulador puntuacion obtenida en movimiento */
+/*Acumulador puntuacion obtenida en movimiento */
 
 function moveLeft() {
   let hasCombined = [false, false, false, false];
   let combinations;
-
+  let totalPoints = 0;
   for (i = 0; i < height; i++) {
     combinations = 0;
     for (j = 0; j < width; j++) {
@@ -138,11 +140,11 @@ function moveLeft() {
               move("Left", yPos, xPos);
               xPos -= 1;
             } else if (!hasCombined[i] && sideIsCombinable("Left", yPos, xPos)) {
-              if (combinations == 1) {
+              if (combinations == 2) {
                 hasCombined[i] = true;
               } else {
                 combinations++;
-                combineBoxes("Left", yPos, xPos);
+                totalPoints += combineBoxes("Left", yPos, xPos);
                 xPos -= 1;
               }
             }
@@ -150,13 +152,13 @@ function moveLeft() {
         }
       }
     }
-    hasCombined[i] = false;
-
   }
+  return totalPoints;
 }
 
 function keyTop() {
-  moveTop();
+  let obtainedPoints = moveTop();
+  updateScore(obtainedPoints);
   generateBox();
   imprimirTablero();
 }
@@ -164,10 +166,11 @@ function keyTop() {
 function moveTop() {
   let hasCombined = [false, false, false, false];
   let combinations;
+  let totalPoints = 0;
   for (i = 0; i < height; i++) {
     combinations = 0;
     if (i > 0) {
-      for (j = 0; j < width; j++) {
+      for (j = 0; j <= width - 1; j++) {
         if (squares[i][j].className == "box") {
           let xPos = j;
           let yPos = i;
@@ -176,23 +179,25 @@ function moveTop() {
               move("Top", yPos, xPos);
               yPos -= 1;
             } else if (!hasCombined[j] && sideIsCombinable("Top", yPos, xPos)) {
-              if (combinations == 1) {
+              if (combinations == 2) {
                 hasCombined[j] = true;
               } else {
                 combinations++;
-                combineBoxes("Top", yPos, xPos);
+                totalPoints += combineBoxes("Top", yPos, xPos);
                 yPos -= 1;
               }
             }
-          } while (canKeepMoving("Top", yPos, xPos, hasCombined[xPos]));
+          } while (canKeepMoving("Top", yPos, xPos, hasCombined[j]));
         }
       }
     }
   }
+  return totalPoints;
 }
 
 function keyRight() {
-  moveRight();
+  let obtainedPoints = moveRight();
+  updateScore(obtainedPoints);
   generateBox();
   imprimirTablero();
 }
@@ -200,7 +205,7 @@ function keyRight() {
 function moveRight() {
   let hasCombined = [false, false, false, false];
   let combinations;
-
+  let totalPoints = 0;
   for (i = 0; i < height; i++) {
     combinations = 0;
     for (j = width - 1; j >= 0; j--) {
@@ -213,11 +218,11 @@ function moveRight() {
               move("Right", yPos, xPos);
               xPos += 1;
             } else if (!hasCombined[i] && sideIsCombinable("Right", yPos, xPos)) {
-              if (combinations == 1) {
+              if (combinations == 2) {
                 hasCombined[i] = true;
               } else {
                 combinations++;
-                combineBoxes("Right", yPos, xPos);
+                totalPoints += combineBoxes("Right", yPos, xPos);
                 xPos += 1;
               }
             }
@@ -227,10 +232,12 @@ function moveRight() {
       }
     }
   }
+  return totalPoints;
 }
 
 function keyDown() {
-  moveDown();
+  let obtainedPoints = moveDown();
+  updateScore(obtainedPoints);
   generateBox();
   imprimirTablero();
 }
@@ -238,9 +245,10 @@ function keyDown() {
 function moveDown() {
   let hasCombined = [false, false, false, false];
   let combinations = 0;
+  let totalPoints = 0;
   for (i = height - 1; i >= 0; i--) {
     combinations = 0;
-    for (j = 0; j < width - 1; j++) {
+    for (j = 0; j <= width - 1; j++) {
       if (i < height - 1) {
         if (squares[i][j].className == "box") {
           let xPos = j;
@@ -250,11 +258,11 @@ function moveDown() {
               move("Bottom", yPos, xPos);
               yPos += 1;
             } else if (!hasCombined[j] && sideIsCombinable("Bottom", yPos, xPos)) {
-              if (combinations == 1) {
+              if (combinations == 2) {
                 hasCombined[j] = true;
               } else {
                 combinations++;
-                combineBoxes("Bottom", yPos, xPos);
+                totalPoints += combineBoxes("Bottom", yPos, xPos);
                 yPos += 1;
               }
             }
@@ -263,6 +271,11 @@ function moveDown() {
       }
     }
   }
+  return totalPoints;
+}
+
+function updateScore(obtainedPoints) {
+  marcadorDisplay.innerHTML = (parseInt(marcadorDisplay.innerHTML) + obtainedPoints).toString();
 }
 
 
@@ -335,24 +348,31 @@ function move(side, y, x) {
 }
 
 function combineBoxes(side, y, x) {
+  let total = 0;
   switch (side) {
     case "Left":
-      squares[y][x - 1].innerHTML = (parseInt(squares[y][x].innerHTML) + parseInt(squares[y][x - 1].innerHTML)).toString();
+      total = parseInt(squares[y][x].innerHTML) + parseInt(squares[y][x - 1].innerHTML);
+      squares[y][x - 1].innerHTML = total.toString();
       emptyCurrentBox(y, x);
       break;
     case "Right":
-      squares[y][x + 1].innerHTML = (parseInt(squares[y][x].innerHTML) + parseInt(squares[y][x + 1].innerHTML)).toString();
+      total = parseInt(squares[y][x].innerHTML) + parseInt(squares[y][x + 1].innerHTML);
+      squares[y][x + 1].innerHTML = total.toString();
       emptyCurrentBox(y, x);
       break;
     case "Bottom":
-      squares[y + 1][x].innerHTML = (parseInt(squares[y][x].innerHTML) + parseInt(squares[y + 1][x].innerHTML)).toString();
+      total = parseInt(squares[y][x].innerHTML) + parseInt(squares[y + 1][x].innerHTML)
+      squares[y + 1][x].innerHTML = total.toString();
       emptyCurrentBox(y, x);
       break;
     case "Top":
-      squares[y - 1][x].innerHTML = (parseInt(squares[y][x].innerHTML) + parseInt(squares[y - 1][x].innerHTML)).toString();
+      total = parseInt(squares[y][x].innerHTML) + parseInt(squares[y - 1][x].innerHTML)
+      squares[y - 1][x].innerHTML = total.toString();
       emptyCurrentBox(y, x);
       break;
   }
+
+  return total;
 }
 
 function emptyCurrentBox(y, x) {

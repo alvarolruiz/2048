@@ -46,6 +46,8 @@ body {
     justify-content: center;
     background-color: rgba(119, 0, 255, 0.377);
     border-radius: 6px;
+    font-size: 25px;
+    font-weight: bold;
 }
 
 .emptyBox {
