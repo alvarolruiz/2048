@@ -99,10 +99,7 @@ casillas hacia el lado que indique la flecha, fusionar cajas cuando nos
 encontremos con la misma en el lado indicado por la flecha, modificar array
 , cambiar color, cambiar puntuacion y generar un nuevo cuadrado.
 
-El movimiento se realizara de la siguiente forma. 
-No se mueven en:
-Izquierda: cajas en h,0
-Derecha: cajas en y,w-1;
+Falta guardar los puntos en el marcador por cada movimiento y comprobar si se ha perdido o si se ha ganado.
 */
 
 
@@ -123,11 +120,14 @@ function keyLeft() {
   generateBox();
   imprimirTablero();
 }
+  /*Acumulador puntuacion obtenida en movimiento */
 
 function moveLeft() {
-  /*Acumulador puntuacion obtenida en movimiento */
   let hasCombined = [false, false, false, false];
+  let combinations;
+
   for (i = 0; i < height; i++) {
+    combinations = 0;
     for (j = 0; j < width; j++) {
       if (j > 0) {
         if (squares[i][j].className == "box") {
@@ -137,32 +137,35 @@ function moveLeft() {
             if (sideIsEmptyBox("Left", yPos, xPos)) {
               move("Left", yPos, xPos);
               xPos -= 1;
-            } else if (!hasCombined[yPos] && sideIsCombinable("Left", yPos, xPos)) {
-              combineBoxes("Left", yPos, xPos);
-              hasCombined[i] = true;
-              xPos -= 1;
+            } else if (!hasCombined[i] && sideIsCombinable("Left", yPos, xPos)) {
+              if (combinations == 1) {
+                hasCombined[i] = true;
+              } else {
+                combinations++;
+                combineBoxes("Left", yPos, xPos);
+                xPos -= 1;
+              }
             }
           } while (canKeepMoving("Left", yPos, xPos, hasCombined[yPos]));
-          hasCombined[xPos] = false;
-
         }
       }
     }
+    hasCombined[i] = false;
+
   }
 }
 
-/*No funciona bien. hasCombined, replantear*/
 function keyTop() {
   moveTop();
   generateBox();
   imprimirTablero();
-
-  /*y-- */
 }
 
 function moveTop() {
   let hasCombined = [false, false, false, false];
+  let combinations;
   for (i = 0; i < height; i++) {
+    combinations = 0;
     if (i > 0) {
       for (j = 0; j < width; j++) {
         if (squares[i][j].className == "box") {
@@ -173,15 +176,16 @@ function moveTop() {
               move("Top", yPos, xPos);
               yPos -= 1;
             } else if (!hasCombined[j] && sideIsCombinable("Top", yPos, xPos)) {
-              combineBoxes("Top", yPos, xPos);
-              hasCombined[x] = true;
-              yPos -= 1;
+              if (combinations == 1) {
+                hasCombined[j] = true;
+              } else {
+                combinations++;
+                combineBoxes("Top", yPos, xPos);
+                yPos -= 1;
+              }
             }
           } while (canKeepMoving("Top", yPos, xPos, hasCombined[xPos]));
-          hasCombined[xPos] = false;
-
         }
-
       }
     }
   }
@@ -191,14 +195,14 @@ function keyRight() {
   moveRight();
   generateBox();
   imprimirTablero();
-
-  /*x++ */
-
 }
 
 function moveRight() {
   let hasCombined = [false, false, false, false];
+  let combinations;
+
   for (i = 0; i < height; i++) {
+    combinations = 0;
     for (j = width - 1; j >= 0; j--) {
       if (j < width - 1) {
         if (squares[i][j].className == "box") {
@@ -209,9 +213,13 @@ function moveRight() {
               move("Right", yPos, xPos);
               xPos += 1;
             } else if (!hasCombined[i] && sideIsCombinable("Right", yPos, xPos)) {
-              combineBoxes("Right", yPos, xPos);
-              hasCombined[i] = true;
-              xPos += 1;
+              if (combinations == 1) {
+                hasCombined[i] = true;
+              } else {
+                combinations++;
+                combineBoxes("Right", yPos, xPos);
+                xPos += 1;
+              }
             }
           } while (canKeepMoving("Right", yPos, xPos, hasCombined[i]));
 
@@ -225,14 +233,13 @@ function keyDown() {
   moveDown();
   generateBox();
   imprimirTablero();
-
-  /*y++ */
-
 }
 
 function moveDown() {
   let hasCombined = [false, false, false, false];
+  let combinations = 0;
   for (i = height - 1; i >= 0; i--) {
+    combinations = 0;
     for (j = 0; j < width - 1; j++) {
       if (i < height - 1) {
         if (squares[i][j].className == "box") {
@@ -242,12 +249,16 @@ function moveDown() {
             if (sideIsEmptyBox("Bottom", yPos, xPos)) {
               move("Bottom", yPos, xPos);
               yPos += 1;
-            } else if (!hasCombined[xPos] && sideIsCombinable("Bottom", yPos, xPos)) {
-              combineBoxes("Bottom", yPos, xPos);
-              hasCombined[i] = true;
-              yPos += 1;
+            } else if (!hasCombined[j] && sideIsCombinable("Bottom", yPos, xPos)) {
+              if (combinations == 1) {
+                hasCombined[j] = true;
+              } else {
+                combinations++;
+                combineBoxes("Bottom", yPos, xPos);
+                yPos += 1;
+              }
             }
-          } while (canKeepMoving("Bottom", yPos, xPos, hasCombined[xPos]));
+          } while (canKeepMoving("Bottom", yPos, xPos, hasCombined[j]));
         }
       }
     }
@@ -267,7 +278,7 @@ function canKeepMoving(side, y, x, hasCombined) {
       break;
     case "Right":
       if (x == width - 1 ||
-        ((squares[y][x].innerHTML == squares[y][x + 1].innerHTML) && hasCombined && squares[y][x - 1].className == "box") ||
+        ((squares[y][x].innerHTML == squares[y][x + 1].innerHTML) && hasCombined && squares[y][x + 1].className == "box") ||
         ((squares[y][x].innerHTML != squares[y][x + 1].innerHTML) && squares[y][x + 1].className == "box")) {
         canKeepMoving = false;
       }
@@ -364,7 +375,7 @@ function sideIsCombinable(side, y, x) {
       isCombinable = (squares[y][x].innerHTML == squares[y + 1][x].innerHTML) && (squares[y + 1][x].className == "box");
       break;
     case "Top":
-      isCombinable = (squares[y][x].innerHTML == squares[y - 1][x].innerHTML) && (squares[y + 1][x].className == "box");
+      isCombinable = (squares[y][x].innerHTML == squares[y - 1][x].innerHTML) && (squares[y - 1][x].className == "box");
       break;
   }
   return isCombinable;
